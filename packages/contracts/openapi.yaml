@@ -1,0 +1,30 @@
+openapi: 3.0.3
+info:
+  title: 模序前后端协作实验
+  version: 0.1.0
+paths:
+  /api/comfort:
+    post:
+      summary: 根据用户记录返回陪伴草稿和小行动
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event]
+              properties:
+                event: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reply, actions, contractVersion]
+                properties:
+                  reply: { type: string }
+                  actions: { type: array, items: { type: string } }
+                  contractVersion: { type: string }
+        '422': { description: 输入为空或不符合契约 }
