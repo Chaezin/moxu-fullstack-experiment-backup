@@ -535,14 +535,15 @@ class RecordsPage extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  '2026 年 8 月',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                Expanded(
+                  child: Text(
+                    '2026 年 8 月',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
-                const Spacer(),
-                const Icon(Icons.chevron_left),
-                const Text('成长月历'),
-                const Icon(Icons.chevron_right),
+                const Icon(Icons.chevron_left, size: 20),
+                const Text('月历'),
+                const Icon(Icons.chevron_right, size: 20),
               ],
             ),
             const SizedBox(height: 22),
