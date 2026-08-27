@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://moxu.local/schemas/report.schema.json",
+  "title": "Monthly or yearly report draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reportType", "periodStart", "periodEnd", "claimedCreationCount", "opening", "creationHighlights", "confirmedDiscoveries", "themeChanges", "closing"],
+  "properties": {
+    "reportType": { "enum": ["monthly", "yearly"] },
+    "periodStart": { "type": "string" },
+    "periodEnd": { "type": "string" },
+    "claimedCreationCount": { "type": "integer", "minimum": 0 },
+    "opening": { "type": "string", "minLength": 20, "maxLength": 80 },
+    "creationHighlights": { "$ref": "#/$defs/entries" },
+    "confirmedDiscoveries": { "$ref": "#/$defs/entries" },
+    "themeChanges": { "$ref": "#/$defs/entries" },
+    "closing": { "type": "string" }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title", "text", "sourceIds"],
+      "properties": {
+        "title": { "type": "string" }, "text": { "type": "string" },
+        "sourceIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  }
+}
