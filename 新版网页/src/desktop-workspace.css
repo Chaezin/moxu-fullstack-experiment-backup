@@ -315,14 +315,16 @@ body { background:#fff; }
   .workspace-main #talk.page{height:calc(100% - 34px)}.conversation-workspace{height:100%}.cloud-ip-stage{min-height:115px}.cloud-scene{transform:scale(.54)}
   .workspace-shell:not(.tab-talk) .workspace-main{padding:34px 10px 22px!important}.workspace-shell:not(.tab-talk) .workspace-main>.app-head{margin:0 -2px 8px}
   .social-profile-card{border-radius:22px}.social-story-list section{padding:17px 12px}.social-story-list h3{font-size:13px}.social-story-list p{font-size:7px}.ability-sky{height:430px}.ability-bubble{width:70px!important}.ability-bubble b{font-size:9px}
-  .login-screen,.onboarding-screen{position:relative;width:430px;max-width:calc(100vw - 24px);height:min(880px,calc(100svh - 24px));min-height:0;border:9px solid #171918;border-radius:46px;overflow:auto;box-shadow:0 35px 90px rgba(25,39,34,.32)}
+  #app>.formal-login.login-screen,#app>.onboarding-screen{position:relative;width:430px!important;max-width:calc(100vw - 24px)!important;height:min(880px,calc(100svh - 24px));min-height:0;margin:0 auto;border:9px solid #171918;border-radius:46px;overflow:auto;box-shadow:0 35px 90px rgba(25,39,34,.32)}
+  .formal-login.login-screen{display:block;padding:48px 0 24px}.formal-login.login-screen>section{width:calc(100% - 28px);margin:0 auto;padding:24px 20px;border-radius:22px}.formal-login .login-brand-row{margin-bottom:20px}.formal-login h1{font-size:25px}.formal-login header p{margin:10px 0 18px}.formal-login .login-form{gap:9px}.formal-login .login-submit{height:46px}.formal-login .social-login{padding-top:12px}.formal-login .login-legal{margin-top:14px!important}
+  .onboarding-screen{display:block;padding:55px 14px 24px}.onboarding-screen>section{width:100%;padding:24px 20px;border-radius:22px}.onboarding-screen header{margin-top:18px}.onboarding-screen header .login-mark{margin-bottom:12px}.onboarding-screen h1{font-size:27px}.onboarding-screen header p{margin-bottom:0}.onboarding-form{margin-top:18px}.onboarding-grid{grid-template-columns:1fr;gap:10px}.onboarding-grid label.wide{grid-column:auto}.onboarding-grid textarea{min-height:72px}
   .login-screen:after,.onboarding-screen:after{content:'';position:absolute;z-index:100;left:50%;top:7px;width:112px;height:27px;border-radius:18px;background:#101211;transform:translateX(-50%);pointer-events:none}
 }
 
 /* On an actual phone, the web app becomes the screen itself. */
 @media(max-width:500px){
   html,body,#app{width:100%;min-height:100%;background:#fff}
-  .workspace-shell.phone-shell,.login-screen,.onboarding-screen{width:100%;max-width:none;min-height:100svh;height:100svh;border:0;border-radius:0;box-shadow:none}
+  .workspace-shell.phone-shell,.formal-login.login-screen,.onboarding-screen{width:100%;max-width:none;min-height:100svh;height:100svh;border:0;border-radius:0;box-shadow:none}
   .workspace-shell.phone-shell{grid-template-columns:68px minmax(0,1fr)}.workspace-shell.phone-shell.sidebar-collapsed{grid-template-columns:68px minmax(0,1fr)}
   .workspace-sidebar{height:100svh;min-height:100svh;padding:24px 7px 12px}.workspace-main{height:100svh;overflow-y:auto}.workspace-main #talk.page{height:100svh}
   .workspace-shell.phone-shell:after,.login-screen:after,.onboarding-screen:after{display:none}

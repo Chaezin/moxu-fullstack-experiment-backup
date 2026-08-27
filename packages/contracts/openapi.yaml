@@ -3,6 +3,30 @@ info:
   title: 模序前后端协作实验
   version: 0.1.0
 paths:
+  /api/auth/request-code:
+    post:
+      summary: 为初版注册流程生成手机号验证码
+      responses:
+        '200': { description: 验证码已生成；正式环境由腾讯云短信发送 }
+        '422': { description: 手机号格式不正确 }
+  /api/auth/register:
+    post:
+      summary: 使用手机号、验证码和密码注册
+      responses:
+        '200': { description: 注册成功并返回会话令牌 }
+        '422': { description: 验证码或输入无效 }
+  /api/auth/login:
+    post:
+      summary: 使用手机号和密码登录
+      responses:
+        '200': { description: 登录成功并返回会话令牌 }
+        '401': { description: 手机号或密码错误 }
+  /api/chat:
+    post:
+      summary: 与“时光”进行流式对话
+      responses:
+        '200': { description: UTF-8 流式文本回复 }
+        '503': { description: 服务端尚未配置模型 }
   /api/comfort:
     post:
       summary: 根据用户记录返回陪伴草稿和小行动
