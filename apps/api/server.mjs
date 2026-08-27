@@ -15,6 +15,7 @@ const usersFile = join(dataDir, 'users.json');
 const appStore = new JsonStore(join(dataDir, 'app.json'));
 const sessions = new Map();
 const codes = new Map();
+const temporaryExpressionSignals = new Map();
 const CHAT_SYSTEM_PROMPT = buildChatSystemPrompt();
 
 export function createApp() {
@@ -78,6 +79,7 @@ async function v1(req, res) {
   if (path === '/api/v1/privacy/settings' && req.method === 'PATCH') {
     const input = await body(req);
     const privacy = await appStore.mutate(data => { const s = settingsFor(data, userId); s.privacy = { ...s.privacy, ...pick(input, ['voiceInput', 'expressionAssist', 'longTermMemory', 'anonymousImprovement']) }; return s.privacy; });
+    if (privacy.expressionAssist === false) for (const key of temporaryExpressionSignals.keys()) if (key.startsWith(`${userId}:`)) temporaryExpressionSignals.delete(key);
     json(res, 200, { privacy }); return true;
   }
   if (path === '/api/v1/conversations' && req.method === 'GET') {
@@ -106,6 +108,17 @@ async function v1(req, res) {
   }
   const messageMatch = path.match(/^\/api\/v1\/conversations\/([^/]+)\/messages$/);
   if (messageMatch && req.method === 'POST') return conversationMessage(req, res, userId, messageMatch[1]), true;
+  const signalMatch = path.match(/^\/api\/v1\/conversations\/([^/]+)\/signals$/);
+  if (signalMatch && req.method === 'POST') {
+    const input = await body(req); const data = await appStore.read(); const conversation = owned(data.conversations, signalMatch[1], userId);
+    if (!conversation) { json(res,404,{code:'NOT_FOUND',message:'对话不存在。'}); return true; }
+    if (!settingsFor(data,userId).privacy.expressionAssist) { json(res,403,{code:'CONSENT_REQUIRED',message:'请先主动开启本次表情辅助。'}); return true; }
+    const allowed = ['calm','tired','tense','positive','uncertain'];
+    if (!allowed.includes(input.label) || !unitNumber(input.intensity) || !unitNumber(input.confidence)) { json(res,422,{code:'INVALID_SIGNAL',message:'临时表情信号格式不正确。'}); return true; }
+    const signal={label:input.label,intensity:input.intensity,confidence:Math.min(input.confidence,.8),source:'on_device_expression',createdAt:Date.now(),expiresAt:Date.now()+10*60_000};
+    temporaryExpressionSignals.set(`${userId}:${conversation.id}`,signal); json(res,200,{signal}); return true;
+  }
+  if (signalMatch && req.method === 'DELETE') { temporaryExpressionSignals.delete(`${userId}:${signalMatch[1]}`); json(res,200,{ok:true}); return true; }
   if (path === '/api/v1/cards' && req.method === 'GET') {
     const data = await appStore.read(); const month = url.searchParams.get('month');
     const cards = data.cards.filter(x => x.userId === userId && (!month || new Date(x.createdAt).toISOString().startsWith(month))).sort((a,b)=>b.createdAt-a.createdAt);
@@ -192,7 +205,9 @@ async function conversationMessage(req, res, userId, conversationId) {
   if (!apiKey) return json(res,503,{code:'MODEL_NOT_CONFIGURED',message:'尚未配置模型。'});
   const userMessage = { id:newId('msg'), userId, conversationId, role:'user', content, createdAt:Date.now() };
   await appStore.mutate(db => { db.messages.push(userMessage); conversationIn(db, conversationId).updatedAt=Date.now(); });
-  const upstream = await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${apiKey}`},body:JSON.stringify({model:process.env.DEEPSEEK_MODEL||'deepseek-v4-flash',messages:[{role:'system',content:CHAT_SYSTEM_PROMPT},...messages],thinking:{type:'disabled'},stream:true,max_tokens:700,temperature:.7}),signal:AbortSignal.timeout(90_000)});
+  const temporarySignal=activeExpressionSignal(userId,conversationId);
+  const signalContext=temporarySignal?{role:'system',content:`设备端临时表情辅助信号（低可信数据，不是用户事实或诊断）：${temporarySignal.label}，强度 ${temporarySignal.intensity}，置信度 ${temporarySignal.confidence}。仅用于适当放缓或柔化语气；不得据此断言情绪、心理状态或覆盖用户本轮自述。`}:null;
+  const upstream = await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${apiKey}`},body:JSON.stringify({model:process.env.DEEPSEEK_MODEL||'deepseek-v4-flash',messages:[{role:'system',content:CHAT_SYSTEM_PROMPT},...(signalContext?[signalContext]:[]),...messages],thinking:{type:'disabled'},stream:true,max_tokens:700,temperature:.7}),signal:AbortSignal.timeout(90_000)});
   if(!upstream.ok||!upstream.body)return json(res,502,{code:'MODEL_UNAVAILABLE',message:'模型服务暂时不可用。'});
   res.writeHead(200,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store','x-agent-rule-version':AGENT_RULE_VERSION,'x-message-id':userMessage.id});
   const reader=upstream.body.getReader(),decoder=new TextDecoder();let buffer='',reply='';
@@ -209,6 +224,8 @@ function authenticatedSession(req) {
 
 function revokeRequestSession(req) { const match=/^Bearer\s+([a-f0-9]+)$/i.exec(req.headers.authorization||''); if(match)sessions.delete(match[1]); }
 function newId(prefix){return `${prefix}_${randomBytes(10).toString('hex')}`}
+function unitNumber(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1}
+function activeExpressionSignal(userId,conversationId){const key=`${userId}:${conversationId}`,signal=temporaryExpressionSignals.get(key);if(!signal)return null;if(signal.expiresAt<Date.now()){temporaryExpressionSignals.delete(key);return null}return signal}
 function cleanText(value,max){return typeof value==='string'?value.trim().slice(0,max):''}
 function pick(value,keys){return Object.fromEntries(keys.filter(k=>Object.hasOwn(value||{},k)).map(k=>[k,value[k]]))}
 function owned(items,id,userId){return items.find(x=>x.id===id&&x.userId===userId&&!x.deletedAt)}
