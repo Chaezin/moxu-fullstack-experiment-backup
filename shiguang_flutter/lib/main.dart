@@ -17,11 +17,7 @@ class ShiguangApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: pine, surface: paper),
       scaffoldBackgroundColor: paper,
       useMaterial3: true,
-      fontFamilyFallback: const [
-        'PingFang SC',
-        'Microsoft YaHei',
-        'sans-serif',
-      ],
+        fontFamily: 'NotoSansSC',
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
           fontSize: 32,

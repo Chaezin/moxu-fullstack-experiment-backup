@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shiguang_app/main.dart';
 
 void main() {
+  setUpAll(() async {
+    final loader = FontLoader('NotoSansSC')
+      ..addFont(rootBundle.load('assets/fonts/NotoSansCJKsc-Regular.otf'));
+    await loader.load();
+  });
+
   testWidgets('renders native mobile screens', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;

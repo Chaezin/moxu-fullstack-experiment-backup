@@ -1,17 +1,37 @@
-# shiguang_app
+# 拾光 Flutter 应用
 
-A new Flutter project.
+拾光的原生跨平台版本，目标平台为 Android、iOS、macOS 与 Windows。
 
-## Getting Started
+## 已完成
 
-This project is a starting point for a Flutter application.
+- Flutter 四端工程骨架
+- 原生登录与注册界面
+- 手机底部导航与桌面侧栏自适应布局
+- 我的故事、我的记录、我的画像、我的同路人
+- 成长卡片、月度总结、能力词库、个人记忆、隐私、导出、伙伴空间
+- 摄像头权限说明弹窗
+- 390 × 844 手机尺寸原生渲染测试图
+- 静态分析与 Widget/Golden 测试
 
-A few resources to get you started if this is your first Flutter project:
+## 测试账号
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- 账号：`13800138000`
+- 密码：`Shiguang2026!`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 本地验证
+
+```bash
+../.tooling/flutter/bin/flutter analyze
+../.tooling/flutter/bin/flutter test
+```
+
+## 构建平台
+
+```bash
+flutter build apk
+flutter build ipa
+flutter build macos
+flutter build windows
+```
+
+macOS/iOS 构建需要完整 Xcode；Android 构建需要 Android SDK；Windows 安装包应在 Windows 设备上构建。

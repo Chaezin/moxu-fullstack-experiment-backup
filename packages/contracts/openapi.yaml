@@ -27,6 +27,40 @@ paths:
       responses:
         '200': { description: UTF-8 流式文本回复 }
         '503': { description: 服务端尚未配置模型 }
+  /api/v1/conversations/{conversationId}/signals:
+    post:
+      summary: 提交设备端生成的短时表情辅助信号
+      description: 不接收原始照片、视频、人脸关键点或身份特征；需要用户事先开启表情辅助权限。
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [label, intensity, confidence]
+              properties:
+                label: { type: string, enum: [calm, tired, tense, positive, uncertain] }
+                intensity: { type: number, minimum: 0, maximum: 1 }
+                confidence: { type: number, minimum: 0, maximum: 1 }
+      responses:
+        '200': { description: 信号已保存至内存并将在十分钟后失效 }
+        '403': { description: 用户尚未开启表情辅助权限 }
+        '422': { description: 信号格式无效 }
+    delete:
+      summary: 立即撤回当前对话的临时表情辅助信号
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: 临时信号已删除 }
   /api/comfort:
     post:
       summary: 根据用户记录返回陪伴草稿和小行动
