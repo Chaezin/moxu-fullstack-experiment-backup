@@ -34,7 +34,7 @@ async function requestCode(req, res) {
   if (!validPhone(phone)) return json(res, 422, { code: 'INVALID_PHONE', message: '请输入正确的中国大陆手机号。' });
   const code = String(Math.floor(100000 + Math.random() * 900000));
   codes.set(phone, { code, expiresAt: Date.now() + 5 * 60_000 });
-  return json(res, 200, { ok: true, message: '测试验证码已生成，5 分钟内有效。', devCode: code });
+  return json(res, 200, { ok: true, message: '页面验证码已生成，5 分钟内有效。', devCode: code });
 }
 
 async function register(req, res) {
@@ -52,9 +52,14 @@ async function register(req, res) {
 }
 
 async function login(req, res) {
-  const { phone, password } = await body(req);
+  const { phone, password, code } = await body(req);
   const user = (await loadUsers()).find((item) => item.phone === phone);
-  if (!user || typeof password !== 'string' || !sameHash(hashPassword(password, user.salt), user.passwordHash)) return json(res, 401, { code: 'INVALID_CREDENTIALS', message: '手机号或密码不正确。' });
+  if (!user) return json(res, 401, { code: 'INVALID_CREDENTIALS', message: '账号不存在，请先注册。' });
+  if (typeof code === 'string' && code) {
+    const savedCode = codes.get(phone);
+    if (!savedCode || savedCode.code !== code || savedCode.expiresAt < Date.now()) return json(res, 401, { code: 'INVALID_CODE', message: '验证码不正确或已过期。' });
+    codes.delete(phone);
+  } else if (typeof password !== 'string' || !sameHash(hashPassword(password, user.salt), user.passwordHash)) return json(res, 401, { code: 'INVALID_CREDENTIALS', message: '账号或密码不正确。' });
   return authSuccess(res, user);
 }
 

@@ -329,3 +329,5 @@ body { background:#fff; }
   .workspace-sidebar{height:100svh;min-height:100svh;padding:24px 7px 12px}.workspace-main{height:100svh;overflow-y:auto}.workspace-main #talk.page{height:100svh}
   .workspace-shell.phone-shell:after,.login-screen:after,.onboarding-screen:after{display:none}
 }
+
+.formal-login .login-method-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:18px;padding:4px;border-radius:12px;background:#edf2ef}.formal-login .login-method-tabs button{height:36px;border:0;border-radius:9px;background:transparent;color:#7a8581;font-size:9px}.formal-login .login-method-tabs button.on{background:#fff;color:#244b40;box-shadow:0 5px 16px rgba(44,70,62,.09)}
