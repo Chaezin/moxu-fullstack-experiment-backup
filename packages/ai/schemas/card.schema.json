@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://moxu.local/schemas/card.schema.json",
+  "title": "Conversation feedback card draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["conversationId", "title", "summary", "positiveFeedback", "creationCandidates", "closingLine"],
+  "properties": {
+    "conversationId": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 6, "maxLength": 24 },
+    "summary": { "$ref": "#/$defs/sourcedSummary" },
+    "positiveFeedback": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/sourcedText" } },
+    "creationCandidates": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/creationCandidate" } },
+    "closingLine": { "type": "string" }
+  },
+  "$defs": {
+    "sourceIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "sourcedSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["text", "sourceMessageIds"],
+      "properties": { "text": { "type": "string", "minLength": 30, "maxLength": 120 }, "sourceMessageIds": { "$ref": "#/$defs/sourceIds" } }
+    },
+    "sourcedText": {
+      "type": "object", "additionalProperties": false,
+      "required": ["text", "sourceMessageIds"],
+      "properties": { "text": { "type": "string" }, "sourceMessageIds": { "$ref": "#/$defs/sourceIds" } }
+    },
+    "creationCandidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["label", "description", "sourceMessageIds", "possibleExistingCreationId", "claimQuestion"],
+      "properties": {
+        "label": { "type": "string" }, "description": { "type": "string" },
+        "sourceMessageIds": { "$ref": "#/$defs/sourceIds" },
+        "possibleExistingCreationId": { "type": ["string", "null"] },
+        "claimQuestion": { "type": "string" }
+      }
+    }
+  }
+}

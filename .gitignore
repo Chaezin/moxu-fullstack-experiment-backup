@@ -1,0 +1,26 @@
+.data/
+.env
+.env.local
+.pnpm-store/
+node_modules/
+*.zip
+.DS_Store
+.tooling/
+tools/downloads/
+
+# Flutter generated files and machine-local configuration
+shiguang_flutter/.dart_tool/
+shiguang_flutter/build/
+shiguang_flutter/.idea/
+shiguang_flutter/*.iml
+shiguang_flutter/android/local.properties
+shiguang_flutter/ios/Flutter/Generated.xcconfig
+shiguang_flutter/ios/Flutter/flutter_export_environment.sh
+shiguang_flutter/ios/Flutter/ephemeral/
+shiguang_flutter/macos/Flutter/ephemeral/
+
+# Local archives, screenshots and standalone nested experiments
+备份/
+拾光APP界面截图-*/
+拾光项目全界面截图-*/
+拾光外部站点/

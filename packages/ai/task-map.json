@@ -1,0 +1,32 @@
+{
+  "version": "1.1",
+  "commonRules": [
+    "rules/00-role.md",
+    "rules/01-conversation.md",
+    "rules/02-safety.md",
+    "rules/03-privacy.md",
+    "rules/04-output-boundaries.md"
+  ],
+  "tasks": {
+    "chat_reply": {
+      "task": "tasks/chat-reply.md",
+      "knowledge": ["knowledge/conversation-methods.md"],
+      "output": "text"
+    },
+    "build_card": {
+      "task": "tasks/build-card.md",
+      "knowledge": ["knowledge/creation-examples.md", "knowledge/product-concepts.md"],
+      "outputSchema": "schemas/card.schema.json"
+    },
+    "propose_profile_updates": {
+      "task": "tasks/update-profile.md",
+      "knowledge": ["knowledge/product-concepts.md", "knowledge/skill-interest-examples.md"],
+      "outputSchema": "schemas/profile-update.schema.json"
+    },
+    "build_report": {
+      "task": "tasks/build-report.md",
+      "knowledge": ["knowledge/product-concepts.md"],
+      "outputSchema": "schemas/report.schema.json"
+    }
+  }
+}

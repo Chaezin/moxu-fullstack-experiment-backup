@@ -1,0 +1,9 @@
+{
+  "name": "moxu-fullstack-experiment",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env apps/api/server.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
