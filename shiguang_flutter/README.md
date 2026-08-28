@@ -1,36 +1,47 @@
-# 拾光 Flutter WebView 应用
+# 我是谁 Flutter 应用
 
-拾光最新网页界面的跨平台应用外壳。iOS、Android 和 macOS 启动后加载应用内置的网页资源：
+“我是谁”的原生 Flutter 移动版。正式入口使用毛毡视觉页面；Ivy 原有的 WebView 页面和演示接口继续保留为功能迁移参考，不再作为 App 启动入口。
+
+## 原生移动端
+
+- 原生登录与注册界面
+- 可收缩左侧导航
+- 我的故事、记录、画像与同路人
+- 成长卡片、月度总结、能力词库、个人记忆、隐私与导出
+- 真实毛毡材质资产、正方形矢量图标与多宽度布局测试
+
+## 保留的 Web 演示资源
 
 `assets/web/index.html`
 
 内置版通过 `assets/web/src/demo-api.js` 提供 `/api/v1` 演示接口，包含测试登录、历史对话、成长卡片、能力线索、月报、推荐方向和聊天回复。演示数据保存在设备本地，不依赖腾讯云服务。
 
-## 平台实现
+这些资源用于把既有功能逐项迁移到原生 Flutter，不会由 `lib/main.dart` 直接加载。
 
-- Android、iOS、macOS：Flutter 官方 `webview_flutter`，加载内置演示版
-- Windows：基于 Edge WebView2 的 `webview_flutter_windows`
-- 支持 JavaScript、站内返回、加载进度、失败提示和重新加载
-- macOS 沙盒与 Android 已配置联网权限
+## 旧 WebView 平台文件
+
+- `lib/standard_webview_page.dart`
+- `lib/windows_webview_page.dart`
+
+它们暂时保留用于对照，不属于当前原生移动端入口。
 
 ## 本地验证
 
 ```bash
-../.tooling/flutter/bin/flutter analyze
-../.tooling/flutter/bin/flutter test
+D:/flutter/bin/flutter analyze --no-pub
+D:/flutter/bin/flutter test --concurrency=1 --no-pub
 ```
 
 ## 运行
 
 ```bash
-../.tooling/flutter/bin/flutter run -d macos
+D:/flutter/bin/flutter run
 ```
 
-Android、iOS、Windows 分别选择对应设备运行。Windows 设备需要安装 Microsoft Edge WebView2 Runtime。
+Android、iOS 分别选择对应设备运行。iOS 最终构建仍需要 macOS 与 Xcode。
 
 ## 演示账户
 
 - 手机号：`13800138000`
 - 密码：`Shiguang2026!`
 - 验证码：`202608`
-- 也可使用“本设备一键登录”
