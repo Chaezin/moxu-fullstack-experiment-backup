@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -34,6 +36,33 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
             if (mounted) setState(() => _progress = progress);
           },
           onPageFinished: (_) async {
+            if (Platform.isIOS) {
+              await _controller.runJavaScript('''
+                (() => {
+                  const viewport = document.querySelector('meta[name="viewport"]');
+                  if (viewport) {
+                    viewport.setAttribute(
+                      'content',
+                      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+                    );
+                  }
+                  if (!document.getElementById('shiguang-ios-webview-fix')) {
+                    const style = document.createElement('style');
+                    style.id = 'shiguang-ios-webview-fix';
+                    style.textContent = 'input, textarea, select { font-size: 16px !important; }';
+                    document.head.appendChild(style);
+                  }
+                  const resetInitialFocus = () => {
+                    if (document.activeElement instanceof HTMLElement) {
+                      document.activeElement.blur();
+                    }
+                    window.scrollTo(0, 0);
+                  };
+                  resetInitialFocus();
+                  setTimeout(resetInitialFocus, 500);
+                })();
+              ''');
+            }
             final canGoBack = await _controller.canGoBack();
             if (mounted) {
               setState(() {
