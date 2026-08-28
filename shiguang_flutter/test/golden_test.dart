@@ -30,7 +30,9 @@ void main() {
       matchesGoldenFile('goldens/02-story.png'),
     );
 
-    await tester.tap(find.text('我的记录').last);
+    await tester.tap(find.byTooltip('展开侧边栏'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('我的记录'));
     await tester.pumpAndSettle();
     await expectLater(
       find.byType(MaterialApp),
