@@ -76,8 +76,13 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
             setState(() => _error = error.description);
           },
         ),
-      )
-      ..loadFlutterAsset(widget.assetPath);
+      );
+    _loadInitialPage();
+  }
+
+  Future<void> _loadInitialPage() async {
+    await _controller.clearCache();
+    await _controller.loadFlutterAsset(widget.assetPath);
   }
 
   Future<void> _handleBack() async {
@@ -112,7 +117,7 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
             if (_error != null)
               _WebViewError(
                 message: _error!,
-                onRetry: () => _controller.loadFlutterAsset(widget.assetPath),
+                onRetry: _loadInitialPage,
               ),
           ],
         ),

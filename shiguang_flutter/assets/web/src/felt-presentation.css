@@ -1,0 +1,59 @@
+.felt-presentation-page{padding:0 0 42px;animation:enter .35s ease}
+.felt-mode-switch{display:flex;gap:8px;margin:2px 0 14px;padding:5px;border-radius:16px;background:#edf1ed}
+.felt-mode-switch button{flex:1;min-height:38px;border:0;border-radius:12px;background:transparent;color:#657169;font-size:11px}
+.felt-mode-switch button.on{background:#fff;color:#315b4d;box-shadow:0 5px 15px #263d3020}
+.felt-poster{position:relative;isolation:isolate;overflow:hidden;width:100%;aspect-ratio:9/16;border-radius:22px;background:#f7f1e8;box-shadow:0 20px 50px #28372d24;touch-action:manipulation}
+.felt-poster>img{position:absolute;z-index:-3;inset:0;width:100%;height:100%;object-fit:cover}
+.felt-poster:after{content:'';position:absolute;z-index:5;inset:0;pointer-events:none;opacity:.08;background-image:repeating-radial-gradient(circle at 30% 20%,transparent 0 2px,#2f2a2617 2px 2.7px);mix-blend-mode:multiply}
+.felt-scene{position:absolute;z-index:2;inset:0;display:flex;flex-direction:column;padding:8% 7.5% 10%;color:#2f2a26;animation:felt-in .48s cubic-bezier(.22,.78,.18,1)}
+@keyframes felt-in{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:none}}
+.felt-eyebrow{margin:0;color:#52694f;font-size:10px;font-weight:700;letter-spacing:.08em}
+.felt-title{max-width:8em;margin:13px 0 0;font:700 clamp(31px,8.5vw,48px)/1.2 'Songti SC','STSong','Noto Serif SC',serif;letter-spacing:-.05em}
+.felt-subtitle{max-width:25em;margin:15px 0 0;color:#5f564f;font-size:12px;line-height:1.7}
+.felt-single .felt-card-date{font-size:9px;color:#745f54}.felt-single .felt-card-date b{display:block;margin-top:3px;color:#d27865}
+.felt-single-copy{margin-top:10%}.felt-single .felt-title{max-width:6.5em}
+.felt-cloud-badge{position:absolute;top:3%;right:5%;width:25%;aspect-ratio:1;border-radius:50%;background:#dcecef;display:grid;place-items:center;box-shadow:0 8px 18px #38483d20}
+.felt-cloud-badge img{width:90%;height:90%;object-fit:contain}
+.felt-claim{display:grid;gap:8px;margin-top:auto;margin-bottom:5%;padding:14px;border:1px solid #52694f42;border-radius:12px;background:#fffdf9e8;box-shadow:0 12px 28px #524a411c}
+.felt-claim small,.felt-claim strong{color:#52694f;font-size:9px}.felt-claim p{margin:0;font:500 14px/1.6 'Songti SC','STSong',serif}.felt-evidence{display:grid;grid-template-columns:58px 1fr;gap:8px;padding-top:9px;border-top:1px solid #ded5c9;font-size:9px;line-height:1.5;color:#5f564f}
+.felt-review{justify-content:flex-start;padding-top:14%}.felt-review .felt-title{max-width:7.6em}.felt-metric{display:flex;align-items:baseline;gap:10px;width:max-content;margin-top:22px;padding:9px 14px;border-radius:10px;background:#fffdf9dd;color:#52694f}.felt-metric strong{font:700 42px 'Songti SC',serif}.felt-metric span{max-width:120px;font-size:9px}
+.felt-fragments{display:grid;gap:9px;margin-top:24px}.felt-fragment{display:grid;grid-template-columns:58px 1fr;gap:9px;align-items:center;padding:11px 13px;border-radius:11px;background:#fffdf9e9;box-shadow:0 8px 18px #4d453d14}.felt-fragment:nth-child(2){margin-left:6%;background:#e6ede4e8}.felt-fragment:nth-child(3){margin-left:3%;background:#e2e9ede8}.felt-fragment strong{color:#52694f;font-size:10px}.felt-fragment p{margin:0;font-size:11px;line-height:1.45}
+.felt-keywords{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}.felt-keywords span{padding:9px 13px;border-radius:99px;background:#fffdf9df;color:#52694f;font-size:10px;box-shadow:0 7px 16px #4d453d12}
+.felt-quote{margin:auto 0 23%;padding:18px;border-radius:14px;background:#fffdf9df}.felt-quote blockquote{margin:0;font:600 24px/1.55 'Songti SC',serif}.felt-quote p{margin:13px 0 0;font-size:10px;line-height:1.6;color:#5f564f}
+.felt-folio{position:absolute;z-index:6;right:7%;bottom:3%;left:7%;display:flex;justify-content:space-between;font-size:8px;color:#4c49436f;letter-spacing:.08em}
+.felt-play{position:absolute;z-index:8;top:50%;left:50%;width:62px;height:62px;border:0;border-radius:50%;background:#315b4de8;color:#fff;font-size:23px;transform:translate(-50%,-50%);box-shadow:0 13px 30px #253a3050}
+.felt-controls{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:9px;margin-top:13px}.felt-controls button{min-height:42px;border:0;border-radius:13px;background:#edf1ed;color:#315b4d}.felt-progress{height:4px;overflow:hidden;border-radius:5px;background:#dfe5df}.felt-progress i{display:block;height:100%;background:#52694f;transition:width .35s ease}.felt-save-note{text-align:center;margin:10px 0 0;color:#7b827d;font-size:8px}
+@media(max-width:500px){.felt-presentation-page{margin-inline:-2px}.felt-poster{border-radius:18px}.felt-title{font-size:clamp(29px,8.2vw,40px)}}
+
+/* Social-card felt skin is isolated here so it can be removed without touching content. */
+#friend .social-profile-card,.felt-social-card{background-color:#f7f1e8;background-image:linear-gradient(180deg,#fffdf9b8,#fffdf92e 58%,transparent 82%),url('./felt/card.png');background-size:cover;background-position:center;color:#353129;border:1px solid #84796535;box-shadow:0 24px 58px #51483d28}
+#friend .social-profile-card:before,.felt-social-card:before{content:'';position:absolute;z-index:1;inset:0;opacity:.1;background-image:repeating-radial-gradient(circle at 30% 20%,transparent 0 2px,#302b261e 2px 2.8px);mix-blend-mode:multiply;pointer-events:none}
+#friend .social-profile-card:after,.felt-social-card:after{right:-105px;bottom:-120px;border-color:#8da17d55;box-shadow:0 0 0 42px #c6a17618,0 0 0 84px #7f9d8b12}
+#friend .social-profile-card .social-card-avatar,.felt-social-card .social-card-avatar{border-radius:18px;background:linear-gradient(145deg,#61775a,#9e745f);box-shadow:inset 0 0 0 2px #fff9,0 10px 24px #4c44392a}
+#friend .social-profile-card .social-card-code,.felt-social-card .social-card-code{background:#f3e7d5d9;color:#52694f}
+#friend .social-profile-card .social-story-list,.felt-social-card .social-story-list{border-color:#71685830}
+#friend .social-profile-card .social-story-list section,.felt-social-card .social-story-list section{border-color:#71685830;background:#fffdf969}
+#friend .social-profile-card>header b,#friend .social-profile-card .social-card-identity p,#friend .social-profile-card .social-story-list p,.felt-social-card>header b,.felt-social-card .social-card-identity p,.felt-social-card .social-story-list p{color:#625b50}
+#friend .friend-section-one .social-profile-card>footer:after{content:'点击名片，查看探索方向  ↗';color:#52694f}
+
+/* A compact, near-square archive card that aligns with the calendar surface. */
+.report-reel-first{margin:12px 0 22px!important;padding:0!important;overflow:visible}
+.report-reel-first>header{padding:0 2px 13px!important}
+.report-reel-first .reel-window{padding:0;overflow:visible}
+.report-reel-first .reel-track{display:grid;width:100%;padding:0!important;gap:12px}
+.report-reel-first .reel-card{display:block!important;width:min(100%,390px)!important;height:clamp(285px,calc(100vw - 58px),361px)!important;min-height:285px;aspect-ratio:auto!important;border-radius:22px;background-color:#e9e0d1;background-image:linear-gradient(180deg,#fffdf930,#1f372dc7),url('./felt/card.png');background-size:cover;background-position:center 58%;box-shadow:0 16px 42px #293b3120;border:1px solid #536a5d24}
+.report-reel-first .reel-card:before{content:'';position:absolute;inset:0;opacity:.1;background-image:repeating-radial-gradient(circle at 30% 20%,transparent 0 2px,#302b261e 2px 2.8px);mix-blend-mode:multiply}
+.report-reel-first .reel-card:after{inset:46% 0 0;background:linear-gradient(transparent,#1c3027e8)}
+.report-reel-first .reel-card>div{left:20px;right:20px;bottom:19px}
+.report-reel-first .reel-card h3{max-width:12em;margin:8px 0 12px;font-size:21px;line-height:1.3}
+@media(min-width:700px){.report-reel-first .reel-track{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.report-reel-first .reel-card{width:100%!important;max-width:390px;height:361px!important}}
+
+.felt-text-report{position:relative;isolation:isolate;overflow:hidden;width:100%;min-height:720px;border-radius:22px;background:#f7f1e8;box-shadow:0 20px 52px #293a3026;border:1px solid #6f735f28}
+.felt-text-report>img{position:absolute;z-index:-3;inset:0;width:100%;height:100%;object-fit:cover}
+.felt-text-report:after{content:'';position:absolute;z-index:5;inset:0;opacity:.08;pointer-events:none;background-image:repeating-radial-gradient(circle at 30% 20%,transparent 0 2px,#302b261e 2px 2.8px);mix-blend-mode:multiply}
+.felt-report-copy{position:relative;z-index:2;display:flex;flex-direction:column;min-height:720px;padding:38px 30px 34px;color:#302d28}
+.felt-report-copy header span,.felt-report-copy header small{display:block;font-size:8px;letter-spacing:.12em}.felt-report-copy header span{color:#52694f;font-weight:700}.felt-report-copy header small{margin-top:8px;color:#a86858}
+.felt-report-copy h1{max-width:8em;margin:25px 0 15px;font:700 34px/1.25 'Songti SC','STSong','Noto Serif SC',serif;letter-spacing:-.05em}.felt-report-copy header p{max-width:29em;margin:0;font-size:12px;line-height:1.85;color:#554f47}
+.felt-report-section{margin-top:28px;padding:17px 16px;border-radius:13px;background:#fffdf9d9;box-shadow:0 10px 24px #51483c16}.felt-report-section>small{font-size:9px;font-weight:700;color:#52694f}.felt-report-keywords{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.felt-report-keywords b{padding:7px 10px;border-radius:99px;background:#e6ede4;color:#52694f;font-size:9px}
+.felt-report-evidence{margin-top:12px;background:#fffdf9e5}.felt-report-evidence p{margin:10px 0 0;font-size:11px;line-height:1.75;color:#5b554d}.felt-report-copy>footer{display:flex;justify-content:space-between;align-items:end;margin-top:auto;padding-top:22px;border-top:1px solid #665d4f2b}.felt-report-copy>footer span{font-size:8px;color:#6f685e}.felt-report-copy>footer b{font:700 12px 'Songti SC',serif;color:#52694f}
+@media(max-width:500px){.felt-text-report,.felt-report-copy{min-height:680px}.felt-report-copy{padding:31px 23px 28px}.felt-report-copy h1{font-size:30px}}

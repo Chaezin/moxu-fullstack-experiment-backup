@@ -62,7 +62,10 @@ flutter:
     - assets/images/
     - assets/web/
     - assets/web/src/
+    - assets/web/src/felt/
     - assets/web/src/assets/
+    - assets/web/src/assets/cloud_ip/animations/
+    - assets/web/src/assets/cloud_ip/static/
     - assets/web/src/data/
   fonts:
     - family: NotoSansSC
