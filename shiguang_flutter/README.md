@@ -1,22 +1,15 @@
-# 拾光 Flutter 应用
+# 拾光 Flutter WebView 应用
 
-拾光的原生跨平台版本，目标平台为 Android、iOS、macOS 与 Windows。
+拾光网页的跨平台应用外壳，启动后加载腾讯云正式页面：
 
-## 已完成
+`https://a-d7g81pr41f2b54449-1475901646.tcloudbaseapp.com/demo/`
 
-- Flutter 四端工程骨架
-- 原生登录与注册界面
-- 手机底部导航与桌面侧栏自适应布局
-- 我的故事、我的记录、我的画像、我的同路人
-- 成长卡片、月度总结、能力词库、个人记忆、隐私、导出、伙伴空间
-- 摄像头权限说明弹窗
-- 390 × 844 手机尺寸原生渲染测试图
-- 静态分析与 Widget/Golden 测试
+## 平台实现
 
-## 测试账号
-
-- 账号：`13800138000`
-- 密码：`Shiguang2026!`
+- Android、iOS、macOS：Flutter 官方 `webview_flutter`
+- Windows：基于 Edge WebView2 的 `webview_flutter_windows`
+- 支持 JavaScript、站内返回、加载进度、失败提示和重新加载
+- macOS 沙盒与 Android 已配置联网权限
 
 ## 本地验证
 
@@ -25,13 +18,10 @@
 ../.tooling/flutter/bin/flutter test
 ```
 
-## 构建平台
+## 运行
 
 ```bash
-flutter build apk
-flutter build ipa
-flutter build macos
-flutter build windows
+../.tooling/flutter/bin/flutter run -d macos
 ```
 
-macOS/iOS 构建需要完整 Xcode；Android 构建需要 Android SDK；Windows 安装包应在 Windows 设备上构建。
+Android、iOS、Windows 分别选择对应设备运行。Windows 设备需要安装 Microsoft Edge WebView2 Runtime。
