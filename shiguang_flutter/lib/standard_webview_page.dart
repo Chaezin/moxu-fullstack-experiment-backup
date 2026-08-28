@@ -21,7 +21,6 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFFFFFDF8))
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) {
