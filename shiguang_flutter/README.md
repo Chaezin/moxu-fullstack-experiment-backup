@@ -40,6 +40,29 @@ D:/flutter/bin/flutter run
 
 Android、iOS 分别选择对应设备运行。iOS 最终构建仍需要 macOS 与 Xcode。
 
+## 原生应用连接后端
+
+原生入口直接调用仓库内 `apps/api/server.mjs` 的 `/api/v1` 接口，已接入账号登录、注册验证码、对话读取、消息发送和记录刷新。
+
+先在仓库根目录启动服务端：
+
+```bash
+npm start
+```
+
+默认开发地址：
+
+- Android 模拟器：`http://10.0.2.2:4173`
+- iOS 模拟器、Windows 和 macOS：`http://127.0.0.1:4173`
+
+真机或部署环境通过构建参数指定地址：
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://你的服务端地址
+```
+
+发送 AI 回复还要求服务端配置 `DEEPSEEK_API_KEY`。Flutter 端不会保存或接触该密钥。
+
 ## 演示账户
 
 - 手机号：`13800138000`

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'app_api.dart';
 import 'asset_felt_ui.dart';
 import 'felt_ui.dart';
 
-void main() => runApp(const ShiguangApp());
+void main() => runApp(ShiguangApp(api: NodeAppApi.fromEnvironment()));
 const ink = feltInk,
     pine = feltForest,
     mist = feltCream,
@@ -11,7 +12,9 @@ const ink = feltInk,
     line = feltLine;
 
 class ShiguangApp extends StatelessWidget {
-  const ShiguangApp({super.key});
+  final AppApi? api;
+
+  const ShiguangApp({super.key, this.api});
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -73,18 +76,23 @@ class ShiguangApp extends StatelessWidget {
         ),
       ),
     ),
-    home: const AuthGate(),
+    home: AuthGate(api: api),
   );
 }
 
 class AuthGate extends StatefulWidget {
-  const AuthGate({super.key});
+  final AppApi? api;
+
+  const AuthGate({super.key, this.api});
   @override
   State<AuthGate> createState() => _AuthGateState();
 }
 
 class _AuthGateState extends State<AuthGate> {
-  bool register = false, loggedIn = false;
+  late final AppApi api = widget.api ?? DemoAppApi();
+  bool register = false, loggedIn = false, busy = false, requestingCode = false;
+  String codeValue = '';
+  String? error, codeHint;
   final phone = TextEditingController(text: '13800138000'),
       password = TextEditingController(text: 'Shiguang2026!');
   @override
@@ -94,9 +102,58 @@ class _AuthGateState extends State<AuthGate> {
     super.dispose();
   }
 
+  Future<void> submit() async {
+    if (busy) return;
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      if (register) {
+        await api.register(
+          phone: phone.text.trim(),
+          password: password.text,
+          code: codeValue.trim(),
+        );
+      } else {
+        await api.login(phone: phone.text.trim(), password: password.text);
+      }
+      if (mounted) setState(() => loggedIn = true);
+    } on AppApiException catch (exception) {
+      if (mounted) setState(() => error = exception.message);
+    } catch (_) {
+      if (mounted) setState(() => error = '暂时无法登录，请稍后重试。');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> sendCode() async {
+    if (requestingCode) return;
+    setState(() {
+      requestingCode = true;
+      error = null;
+      codeHint = null;
+    });
+    try {
+      final developmentCode = await api.requestCode(phone.text.trim());
+      if (mounted) {
+        setState(() {
+          codeHint = developmentCode == null
+              ? '验证码已发送。'
+              : '开发验证码：$developmentCode';
+        });
+      }
+    } on AppApiException catch (exception) {
+      if (mounted) setState(() => error = exception.message);
+    } finally {
+      if (mounted) setState(() => requestingCode = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (loggedIn) return const HomeShell();
+    if (loggedIn) return HomeShell(api: api);
     return Scaffold(
       body: AssetMaterialBackdrop(
         child: SafeArea(
@@ -186,15 +243,40 @@ class _AuthGateState extends State<AuthGate> {
                           ),
                           if (register) ...[
                             const SizedBox(height: 12),
-                            const TextField(
-                              key: Key('auth-code'),
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: '验证码',
-                                prefixIcon: Icon(Icons.verified_outlined),
-                                suffixText: '发送验证码',
-                              ),
+                            Stack(
+                              children: [
+                                TextField(
+                                  key: const Key('auth-code'),
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (value) => codeValue = value,
+                                  decoration: const InputDecoration(
+                                    labelText: '验证码',
+                                    prefixIcon: Icon(Icons.verified_outlined),
+                                    suffixText: '发送验证码',
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  width: 104,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.translucent,
+                                    onTap: requestingCode ? null : sendCode,
+                                  ),
+                                ),
+                              ],
                             ),
+                            if (codeHint != null) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                codeHint!,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: feltForest,
+                                ),
+                              ),
+                            ],
                           ],
                           const SizedBox(height: 12),
                           TextField(
@@ -211,9 +293,21 @@ class _AuthGateState extends State<AuthGate> {
                     ),
                     const SizedBox(height: 18),
                     MaterialPrimaryButton(
-                      label: register ? '注册并进入我是谁' : '登录并进入我是谁',
-                      onTap: () => setState(() => loggedIn = true),
+                      label: busy
+                          ? '正在连接…'
+                          : register
+                          ? '注册并进入我是谁'
+                          : '登录并进入我是谁',
+                      onTap: submit,
                     ),
+                    if (error != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: feltClay, fontSize: 12),
+                      ),
+                    ],
                     TextButton(
                       onPressed: () => setState(() => register = !register),
                       child: Text(register ? '已经有账户？返回登录' : '还没有账户？创建新账户'),
@@ -305,8 +399,91 @@ class BrandMark extends StatelessWidget {
   );
 }
 
+class ConversationController extends ChangeNotifier {
+  final AppApi api;
+  List<ConversationSummary> conversations = const [];
+  List<ConversationMessage> messages = const [];
+  String? activeConversationId;
+  String? error;
+  bool loading = false, sending = false;
+
+  ConversationController(this.api);
+
+  Future<void> initialize() async {
+    if (loading || activeConversationId != null) return;
+    loading = true;
+    error = null;
+    notifyListeners();
+    try {
+      var items = await api.listConversations();
+      if (items.isEmpty) {
+        items = [await api.createConversation()];
+      }
+      conversations = items;
+      activeConversationId = items.first.id;
+      final detail = await api.getConversation(items.first.id);
+      messages = detail.messages;
+    } on AppApiException catch (exception) {
+      error = exception.message;
+    } catch (_) {
+      error = '暂时无法读取对话记录。';
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> send(String text) async {
+    final content = text.trim();
+    final conversationId = activeConversationId;
+    if (content.isEmpty || conversationId == null || sending) return;
+    final optimistic = ConversationMessage(
+      id: 'local-${DateTime.now().microsecondsSinceEpoch}',
+      role: 'user',
+      content: content,
+      createdAt: DateTime.now(),
+    );
+    sending = true;
+    error = null;
+    messages = [...messages, optimistic];
+    notifyListeners();
+    try {
+      final reply = await api.sendMessage(conversationId, content);
+      messages = [...messages, reply];
+      final index = conversations.indexWhere(
+        (item) => item.id == conversationId,
+      );
+      if (index >= 0) {
+        final current = conversations[index];
+        final updated = current.copyWith(
+          title: current.title == '尚未命名的新对话'
+              ? content.substring(0, content.length < 24 ? content.length : 24)
+              : current.title,
+          updatedAt: DateTime.now(),
+          messageCount: current.messageCount + 2,
+        );
+        conversations = [
+          updated,
+          ...conversations.where((item) => item.id != conversationId),
+        ];
+      }
+    } on AppApiException catch (exception) {
+      messages = messages.where((item) => item.id != optimistic.id).toList();
+      error = exception.message;
+    } catch (_) {
+      messages = messages.where((item) => item.id != optimistic.id).toList();
+      error = '消息没有发出，请稍后重试。';
+    } finally {
+      sending = false;
+      notifyListeners();
+    }
+  }
+}
+
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  final AppApi api;
+
+  const HomeShell({super.key, required this.api});
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
@@ -316,12 +493,7 @@ class _HomeShellState extends State<HomeShell> {
   static const double collapsedRailWidth = 44;
   int index = 0;
   bool railOpen = true;
-  final pages = const [
-    StoryPage(),
-    RecordsPage(),
-    PortraitPage(),
-    PartnersPage(),
-  ];
+  late final ConversationController conversations;
   final destinations = const [
     NavigationDestination(
       icon: AssetFeltIconTile(
@@ -394,6 +566,19 @@ class _HomeShellState extends State<HomeShell> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    conversations = ConversationController(widget.api);
+    conversations.initialize();
+  }
+
+  @override
+  void dispose() {
+    conversations.dispose();
+    super.dispose();
+  }
+
   void selectPage(int value) {
     setState(() {
       index = value;
@@ -402,123 +587,133 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: feltCream,
-    body: LayoutBuilder(
-      builder: (context, constraints) {
-        final mobileWidth = constraints.maxWidth.clamp(0.0, 480.0).toDouble();
-        return Center(
-          child: SizedBox(
-            width: mobileWidth,
-            height: constraints.maxHeight,
-            child: Material(
-              color: feltCream,
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOutCubic,
-                    width: railOpen ? railWidth : collapsedRailWidth,
-                    clipBehavior: Clip.hardEdge,
-                    decoration: const BoxDecoration(
-                      color: feltIvory,
-                      border: Border(right: BorderSide(color: line)),
-                    ),
-                    child: railOpen
-                        ? OverflowBox(
-                            alignment: Alignment.centerLeft,
-                            minWidth: railWidth,
-                            maxWidth: railWidth,
-                            child: SafeArea(
-                              child: NavigationRail(
-                                backgroundColor: feltIvory,
-                                minWidth: railWidth,
-                                groupAlignment: index == 0 ? -1 : -.55,
-                                selectedIndex: index,
-                                labelType: index == 0
-                                    ? NavigationRailLabelType.none
-                                    : NavigationRailLabelType.all,
-                                selectedLabelTextStyle: const TextStyle(
-                                  color: feltForest,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  fontFamily: 'NotoSansSC',
-                                ),
-                                unselectedLabelTextStyle: const TextStyle(
-                                  color: feltMuted,
-                                  fontSize: 10,
-                                  fontFamily: 'NotoSansSC',
-                                ),
-                                leading: Tooltip(
-                                  message: '隐藏侧边栏',
-                                  child: InkWell(
-                                    onTap: () =>
-                                        setState(() => railOpen = false),
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 8,
-                                      ),
-                                      child: Text(
-                                        index == 0 ? '我是谁' : '我是\n谁',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: feltForest,
-                                          fontSize: index == 0 ? 17 : 16,
-                                          height: 1.05,
-                                          fontWeight: FontWeight.w700,
-                                          fontFamily: 'NotoSerifSC',
+  Widget build(BuildContext context) {
+    final pages = [
+      StoryPage(controller: conversations),
+      RecordsPage(controller: conversations),
+      const PortraitPage(),
+      const PartnersPage(),
+    ];
+    return Scaffold(
+      backgroundColor: feltCream,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final mobileWidth = constraints.maxWidth.clamp(0.0, 480.0).toDouble();
+          return Center(
+            child: SizedBox(
+              width: mobileWidth,
+              height: constraints.maxHeight,
+              child: Material(
+                color: feltCream,
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      width: railOpen ? railWidth : collapsedRailWidth,
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                        color: feltIvory,
+                        border: Border(right: BorderSide(color: line)),
+                      ),
+                      child: railOpen
+                          ? OverflowBox(
+                              alignment: Alignment.centerLeft,
+                              minWidth: railWidth,
+                              maxWidth: railWidth,
+                              child: SafeArea(
+                                child: NavigationRail(
+                                  backgroundColor: feltIvory,
+                                  minWidth: railWidth,
+                                  groupAlignment: index == 0 ? -1 : -.55,
+                                  selectedIndex: index,
+                                  labelType: index == 0
+                                      ? NavigationRailLabelType.none
+                                      : NavigationRailLabelType.all,
+                                  selectedLabelTextStyle: const TextStyle(
+                                    color: feltForest,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'NotoSansSC',
+                                  ),
+                                  unselectedLabelTextStyle: const TextStyle(
+                                    color: feltMuted,
+                                    fontSize: 10,
+                                    fontFamily: 'NotoSansSC',
+                                  ),
+                                  leading: Tooltip(
+                                    message: '隐藏侧边栏',
+                                    child: InkWell(
+                                      onTap: () =>
+                                          setState(() => railOpen = false),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 8,
+                                        ),
+                                        child: Text(
+                                          index == 0 ? '我是谁' : '我是\n谁',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: feltForest,
+                                            fontSize: index == 0 ? 17 : 16,
+                                            height: 1.05,
+                                            fontWeight: FontWeight.w700,
+                                            fontFamily: 'NotoSerifSC',
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                onDestinationSelected: selectPage,
-                                destinations: [
-                                  for (final destination in destinations)
-                                    NavigationRailDestination(
-                                      icon: destination.icon,
-                                      selectedIcon: destination.selectedIcon,
-                                      label: Text(
-                                        destination.label,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.fade,
+                                  onDestinationSelected: selectPage,
+                                  destinations: [
+                                    for (final destination in destinations)
+                                      NavigationRailDestination(
+                                        icon: destination.icon,
+                                        selectedIcon: destination.selectedIcon,
+                                        label: Text(
+                                          destination.label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.fade,
+                                        ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          )
-                        : SafeArea(
-                            child: Align(
-                              alignment: Alignment.topCenter,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 84),
-                                child: IconButton(
-                                  tooltip: '打开侧边栏',
-                                  visualDensity: VisualDensity.compact,
-                                  onPressed: () =>
-                                      setState(() => railOpen = true),
-                                  icon: const Icon(Icons.keyboard_arrow_right),
+                            )
+                          : SafeArea(
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 84),
+                                  child: IconButton(
+                                    tooltip: '打开侧边栏',
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () =>
+                                        setState(() => railOpen = true),
+                                    icon: const Icon(
+                                      Icons.keyboard_arrow_right,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                  ),
-                  Expanded(
-                    child: FeltBackdrop(
-                      child: IndexedStack(index: index, children: pages),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: FeltBackdrop(
+                        child: IndexedStack(index: index, children: pages),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
-    ),
-  );
+          );
+        },
+      ),
+    );
+  }
 }
 
 class PageFrame extends StatelessWidget {
@@ -590,34 +785,39 @@ class PageFrame extends StatelessWidget {
 }
 
 class StoryPage extends StatefulWidget {
-  const StoryPage({super.key});
+  final ConversationController controller;
+
+  const StoryPage({super.key, required this.controller});
   @override
   State<StoryPage> createState() => _StoryPageState();
 }
 
 class _StoryPageState extends State<StoryPage> {
   final input = TextEditingController();
-  final messages = [
-    '晚上好，林溪。今天有没有一件很小、但让你觉得“这是我做出来的”的事情？',
-    '我把阳台重新整理了一下，还给每盆植物做了标签。',
-    '这不只是整理。你在观察植物的需要，也建立了一套自己的分类方法。你最满意哪个决定？',
-  ];
 
-  void sendMessage() {
-    if (input.text.trim().isEmpty) return;
-    setState(() {
-      messages.add(input.text.trim());
-      input.clear();
-    });
+  @override
+  void dispose() {
+    input.dispose();
+    super.dispose();
+  }
+
+  Future<void> sendMessage() async {
+    final text = input.text.trim();
+    if (text.isEmpty || widget.controller.sending) return;
+    input.clear();
+    await widget.controller.send(text);
   }
 
   Widget bubble(int i) {
-    final mine = i == 1;
+    final message = widget.controller.messages[i];
+    final mine = message.isMine;
     final height = i == 0
         ? 134.0
         : i == 1
         ? 90.0
-        : 150.0;
+        : i == 2
+        ? 150.0
+        : (message.content.length > 70 ? 150.0 : 112.0);
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: SizedBox(
@@ -644,7 +844,7 @@ class _StoryPageState extends State<StoryPage> {
                 const SizedBox(height: 5),
               ],
               Text(
-                messages[i],
+                message.content,
                 maxLines: i == 2 ? 4 : 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 13, height: 1.62),
@@ -673,61 +873,87 @@ class _StoryPageState extends State<StoryPage> {
   }
 
   @override
-  Widget build(BuildContext context) => AssetMaterialBackdrop(
-    child: SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 176,
-              child: Image.asset(
-                materialLandscapeAsset,
-                fit: BoxFit.cover,
-                alignment: Alignment.bottomCenter,
-                filterQuality: FilterQuality.medium,
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) => AssetMaterialBackdrop(
+      child: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 176,
+                child: Image.asset(
+                  materialLandscapeAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.bottomCenter,
+                  filterQuality: FilterQuality.medium,
+                ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(14, 18, 14, 36),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                bubble(0),
-                const SizedBox(height: 14),
-                bubble(1),
-                const SizedBox(height: 25),
-                bubble(2),
-                const SizedBox(height: 25),
-                SizedBox(
-                  height: 168,
-                  child: AssetFeltSurface(
-                    color: feltIvory,
-                    surfaceAsset: materialIvoryAsset,
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-                    radius: 21,
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            const FeltIconTile(
-                              icon: Icons.adjust_rounded,
-                              color: feltSage,
-                              size: 34,
-                            ),
-                            const SizedBox(width: 9),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '表情辅助',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(14, 18, 14, 36),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (widget.controller.loading) ...[
+                    const Center(child: CircularProgressIndicator()),
+                    const SizedBox(height: 25),
+                  ],
+                  if (widget.controller.error != null) ...[
+                    Text(
+                      widget.controller.error!,
+                      style: const TextStyle(color: feltClay, fontSize: 12),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  for (
+                    var i = 0;
+                    i < widget.controller.messages.length;
+                    i++
+                  ) ...[bubble(i), SizedBox(height: i == 0 ? 14 : 25)],
+                  SizedBox(
+                    height: 168,
+                    child: AssetFeltSurface(
+                      color: feltIvory,
+                      surfaceAsset: materialIvoryAsset,
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                      radius: 21,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              const FeltIconTile(
+                                icon: Icons.adjust_rounded,
+                                color: feltSage,
+                                size: 34,
+                              ),
+                              const SizedBox(width: 9),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '表情辅助',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                      ),
                                     ),
-                                  ),
+                                    Text(
+                                      '由你决定',
+                                      style: TextStyle(
+                                        color: feltMuted,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text('情绪信号', style: TextStyle(fontSize: 11)),
                                   Text(
-                                    '由你决定',
+                                    '平静 · 低焦虑',
                                     style: TextStyle(
                                       color: feltMuted,
                                       fontSize: 10,
@@ -735,283 +961,304 @@ class _StoryPageState extends State<StoryPage> {
                                   ),
                                 ],
                               ),
-                            ),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            ],
+                          ),
+                          const Divider(height: 16),
+                          Expanded(
+                            child: Row(
                               children: [
-                                Text('情绪信号', style: TextStyle(fontSize: 11)),
-                                Text(
-                                  '平静 · 低焦虑',
-                                  style: TextStyle(
-                                    color: feltMuted,
-                                    fontSize: 10,
+                                IconButton(
+                                  key: const Key('story-permission-button'),
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () => showDialog(
+                                    context: context,
+                                    builder: (_) => const PermissionDialog(),
+                                  ),
+                                  icon: const Icon(Icons.add_rounded, size: 24),
+                                ),
+                                Expanded(
+                                  child: TextField(
+                                    controller: input,
+                                    style: const TextStyle(fontSize: 13),
+                                    decoration: const InputDecoration(
+                                      hintText: '输入你的想法…',
+                                      hintStyle: TextStyle(fontSize: 14),
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      filled: false,
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                    onSubmitted: (_) => sendMessage(),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 68,
+                                  height: 70,
+                                  child: AssetFeltSurface(
+                                    color: feltForest,
+                                    surfaceAsset: materialForestAsset,
+                                    padding: EdgeInsets.zero,
+                                    radius: 20,
+                                    depth: 2,
+                                    onTap: widget.controller.sending
+                                        ? null
+                                        : sendMessage,
+                                    child: const Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.graphic_eq_rounded,
+                                          size: 24,
+                                          color: feltIvory,
+                                        ),
+                                        Text(
+                                          '说话',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: feltIvory,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        const Divider(height: 16),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              IconButton(
-                                key: const Key('story-permission-button'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () => showDialog(
-                                  context: context,
-                                  builder: (_) => const PermissionDialog(),
-                                ),
-                                icon: const Icon(Icons.add_rounded, size: 24),
-                              ),
-                              Expanded(
-                                child: TextField(
-                                  controller: input,
-                                  style: const TextStyle(fontSize: 13),
-                                  decoration: const InputDecoration(
-                                    hintText: '输入你的想法…',
-                                    hintStyle: TextStyle(fontSize: 14),
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    filled: false,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  onSubmitted: (_) => sendMessage(),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 68,
-                                height: 70,
-                                child: AssetFeltSurface(
-                                  color: feltForest,
-                                  surfaceAsset: materialForestAsset,
-                                  padding: EdgeInsets.zero,
-                                  radius: 20,
-                                  depth: 2,
-                                  onTap: sendMessage,
-                                  child: const Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.graphic_eq_rounded,
-                                        size: 24,
-                                        color: feltIvory,
-                                      ),
-                                      Text(
-                                        '说话',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: feltIvory,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
-                        ),
-                        const Text(
-                          '按一下开始，再按一下结束',
-                          style: TextStyle(fontSize: 9.5, color: feltMuted),
-                        ),
-                      ],
+                          const Text(
+                            '按一下开始，再按一下结束',
+                            style: TextStyle(fontSize: 9.5, color: feltMuted),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 70),
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      openDetail(context, '本次成长卡片', const CardDetail()),
-                  icon: const Icon(Icons.auto_awesome_outlined),
-                  label: const Text('整理这次对话'),
-                ),
-              ]),
+                  const SizedBox(height: 70),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        openDetail(context, '本次成长卡片', const CardDetail()),
+                    icon: const Icon(Icons.auto_awesome_outlined),
+                    label: const Text('整理这次对话'),
+                  ),
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );
 }
 
 class RecordsPage extends StatelessWidget {
-  const RecordsPage({super.key});
+  final ConversationController controller;
+
+  const RecordsPage({super.key, required this.controller});
+
+  String dateLabel(DateTime value) =>
+      '${value.month.toString().padLeft(2, '0')}.${value.day.toString().padLeft(2, '0')}';
+
   @override
-  Widget build(BuildContext context) => AssetMaterialBackdrop(
-    child: PageFrame(
-      eyebrow: 'PAST CONVERSATION CARDS',
-      title: '我的记录',
-      subtitle: '往日名片回顾',
-      children: [
-        const SizedBox(height: 14),
-        LayoutBuilder(
-          builder: (context, box) {
-            final narrow = box.maxWidth < 250;
-            final first = RecordCard(
-              title: '让杂乱重新有秩序',
-              date: '08.19',
-              icon: Icons.eco_outlined,
-              color: feltSage,
-              iconSurfaceAsset: materialSageAsset,
-              onTap: () => openDetail(context, '记录详情', const CardDetail()),
-            );
-            final second = RecordCard(
-              title: '我其实很会照顾细节',
-              date: '08.12',
-              icon: Icons.light_mode_outlined,
-              color: feltClay,
-              iconSurfaceAsset: materialClayAsset,
-              onTap: () => openDetail(context, '记录详情', const CardDetail()),
-            );
-            if (narrow) {
-              return Column(
-                children: [
-                  SizedBox(height: 248, child: first),
-                  const SizedBox(height: 14),
-                  SizedBox(height: 248, child: second),
-                ],
-              );
-            }
-            return SizedBox(
-              height: 248,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: first),
-                  const SizedBox(width: 12),
-                  Expanded(child: second),
-                ],
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 24),
-        AssetFeltSurface(
-          color: feltIvory,
-          surfaceAsset: materialIvoryAsset,
-          textureOpacity: .72,
-          radius: 22,
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'GROWTH CALENDAR',
-                style: TextStyle(
-                  color: feltMuted,
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const SizedBox(height: 7),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '2026 年 8 月',
-                      maxLines: 1,
-                      overflow: TextOverflow.fade,
-                      softWrap: false,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: controller,
+    builder: (context, _) => AssetMaterialBackdrop(
+      child: PageFrame(
+        eyebrow: 'PAST CONVERSATION CARDS',
+        title: '我的记录',
+        subtitle: '往日名片回顾',
+        children: [
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, box) {
+              final narrow = box.maxWidth < 250;
+              final items = controller.conversations.take(2).toList();
+              if (controller.loading && items.isEmpty) {
+                return const SizedBox(
+                  height: 248,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (items.isEmpty) {
+                return const SizedBox(
+                  height: 160,
+                  child: AssetFeltSurface(
+                    color: feltIvory,
+                    surfaceAsset: materialIvoryAsset,
+                    child: Center(child: Text('完成一次对话后，记录会出现在这里。')),
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.chevron_left, size: 19),
-                  const Text('月历', style: TextStyle(fontSize: 12)),
-                  const Icon(Icons.chevron_right, size: 19),
-                ],
-              ),
-              const SizedBox(height: 18),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Text('日'),
-                  Text('一'),
-                  Text('二'),
-                  Text('三'),
-                  Text('四'),
-                  Text('五'),
-                  Text('六'),
-                ],
-              ),
-              const SizedBox(height: 8),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 37,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7,
-                  childAspectRatio: .94,
+                );
+              }
+              final cards = [
+                for (var i = 0; i < items.length; i++)
+                  RecordCard(
+                    title: items[i].title,
+                    date: dateLabel(items[i].updatedAt),
+                    icon: i.isEven
+                        ? Icons.eco_outlined
+                        : Icons.light_mode_outlined,
+                    color: i.isEven ? feltSage : feltClay,
+                    iconSurfaceAsset: i.isEven
+                        ? materialSageAsset
+                        : materialClayAsset,
+                    onTap: () =>
+                        openDetail(context, '记录详情', const CardDetail()),
+                  ),
+              ];
+              if (narrow) {
+                return Column(
+                  children: [
+                    for (var i = 0; i < cards.length; i++) ...[
+                      SizedBox(height: 248, child: cards[i]),
+                      if (i != cards.length - 1) const SizedBox(height: 14),
+                    ],
+                  ],
+                );
+              }
+              return SizedBox(
+                height: 248,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < cards.length; i++) ...[
+                      Expanded(child: cards[i]),
+                      if (i != cards.length - 1) const SizedBox(width: 12),
+                    ],
+                  ],
                 ),
-                itemBuilder: (_, i) {
-                  final day = i - 5;
-                  final marked = [3, 12, 19, 27].contains(day);
-                  if (day <= 0 || day > 31) return const SizedBox.shrink();
-                  if (!marked) {
-                    return Center(
-                      child: Text('$day', style: const TextStyle(fontSize: 12)),
-                    );
-                  }
-                  final clay = day == 12;
-                  return Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: AssetFeltSurface(
-                      color: clay ? feltClay : feltSage,
-                      surfaceAsset: clay
-                          ? materialClayAsset
-                          : materialSageAsset,
-                      textureOpacity: .86,
-                      radius: 9,
-                      depth: 1,
-                      padding: EdgeInsets.zero,
-                      showHighlightBorder: false,
-                      child: Center(
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          AssetFeltSurface(
+            color: feltIvory,
+            surfaceAsset: materialIvoryAsset,
+            textureOpacity: .72,
+            radius: 22,
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'GROWTH CALENDAR',
+                  style: TextStyle(
+                    color: feltMuted,
+                    fontSize: 9,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '2026 年 8 月',
+                        maxLines: 1,
+                        overflow: TextOverflow.fade,
+                        softWrap: false,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.chevron_left, size: 19),
+                    const Text('月历', style: TextStyle(fontSize: 12)),
+                    const Icon(Icons.chevron_right, size: 19),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text('日'),
+                    Text('一'),
+                    Text('二'),
+                    Text('三'),
+                    Text('四'),
+                    Text('五'),
+                    Text('六'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 37,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    childAspectRatio: .94,
+                  ),
+                  itemBuilder: (_, i) {
+                    final day = i - 5;
+                    final marked = [3, 12, 19, 27].contains(day);
+                    if (day <= 0 || day > 31) return const SizedBox.shrink();
+                    if (!marked) {
+                      return Center(
                         child: Text(
                           '$day',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    }
+                    final clay = day == 12;
+                    return Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: AssetFeltSurface(
+                        color: clay ? feltClay : feltSage,
+                        surfaceAsset: clay
+                            ? materialClayAsset
+                            : materialSageAsset,
+                        textureOpacity: .86,
+                        radius: 9,
+                        depth: 1,
+                        padding: EdgeInsets.zero,
+                        showHighlightBorder: false,
+                        child: Center(
+                          child: Text(
+                            '$day',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ],
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 56,
-          child: AssetFeltSurface(
-            color: feltForest,
-            surfaceAsset: materialForestAsset,
-            radius: 18,
-            depth: 2,
-            padding: EdgeInsets.zero,
-            onTap: () => openDetail(context, '八月回望', const MonthlyDetail()),
-            child: const Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.auto_graph, color: feltIvory, size: 20),
-                  SizedBox(width: 9),
-                  Text(
-                    '查看月度总结',
-                    style: TextStyle(
-                      color: feltIvory,
-                      fontWeight: FontWeight.w700,
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 56,
+            child: AssetFeltSurface(
+              color: feltForest,
+              surfaceAsset: materialForestAsset,
+              radius: 18,
+              depth: 2,
+              padding: EdgeInsets.zero,
+              onTap: () => openDetail(context, '八月回望', const MonthlyDetail()),
+              child: const Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_graph, color: feltIvory, size: 20),
+                    SizedBox(width: 9),
+                    Text(
+                      '查看月度总结',
+                      style: TextStyle(
+                        color: feltIvory,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
