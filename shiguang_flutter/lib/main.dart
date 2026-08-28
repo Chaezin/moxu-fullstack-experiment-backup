@@ -7,6 +7,7 @@ import 'windows_webview_page.dart';
 
 const shiguangWebUrl =
     'https://a-d7g81pr41f2b54449-1475901646.tcloudbaseapp.com/demo/';
+const shiguangWebAsset = 'assets/web/index.html';
 
 void main() => runApp(const ShiguangApp());
 
@@ -28,6 +29,6 @@ class ShiguangApp extends StatelessWidget {
         home ??
         (Platform.isWindows
             ? const WindowsWebViewPage(url: shiguangWebUrl)
-            : const StandardWebViewPage(url: shiguangWebUrl)),
+            : const StandardWebViewPage(assetPath: shiguangWebAsset)),
   );
 }

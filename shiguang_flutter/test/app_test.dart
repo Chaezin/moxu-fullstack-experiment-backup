@@ -13,8 +13,7 @@ void main() {
     expect(find.text('拾光 WebView'), findsOneWidget);
   });
 
-  test('uses the deployed Tencent Cloud page', () {
-    expect(Uri.parse(shiguangWebUrl).isScheme('https'), isTrue);
-    expect(shiguangWebUrl, endsWith('/demo/'));
+  test('uses the bundled WebView demo on supported platforms', () {
+    expect(shiguangWebAsset, 'assets/web/index.html');
   });
 }

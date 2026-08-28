@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class StandardWebViewPage extends StatefulWidget {
-  const StandardWebViewPage({super.key, required this.url});
+  const StandardWebViewPage({super.key, required this.assetPath});
 
-  final String url;
+  final String assetPath;
 
   @override
   State<StandardWebViewPage> createState() => _StandardWebViewPageState();
@@ -77,7 +77,7 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
           },
         ),
       )
-      ..loadRequest(Uri.parse(widget.url));
+      ..loadFlutterAsset(widget.assetPath);
   }
 
   Future<void> _handleBack() async {
@@ -112,7 +112,7 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
             if (_error != null)
               _WebViewError(
                 message: _error!,
-                onRetry: () => _controller.loadRequest(Uri.parse(widget.url)),
+                onRetry: () => _controller.loadFlutterAsset(widget.assetPath),
               ),
           ],
         ),
