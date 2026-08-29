@@ -15,6 +15,9 @@
 - 根目录 Node 测试：5 项通过。
 - Web 与语音输入测试：24 项通过。
 - FastAPI 后端测试：48 项通过。
+- Flutter 3.47.2 静态分析：通过，未发现问题。
+- Flutter 测试：29 项通过。
+- Android 调试 APK 构建：通过。
 - Python 后端语法编译检查：通过。
 - 缺失或过短密钥拒绝启动检查：通过。
 - Git 空白与冲突标记检查：通过。
@@ -22,7 +25,12 @@
 
 ## 尚未完成的验证
 
-- 当前机器未安装 Flutter SDK，未运行 `flutter analyze`、Flutter 测试及真实设备构建。
+- 尚未在 Android 真机上安装并完成功能验收。
+- 本机没有 Visual Studio C++ 构建组件，尚未构建 Windows 桌面版。
+
+Flutter 验证使用集成提交 `051c9957afdc0e64f1421ce40b01343efdf33982` 的英文路径副本完成。原工作目录包含中文时，Dart 分析服务会在初始化阶段解析失败；该问题发生在代码分析开始前。
+
+Android 构建当前存在两项非阻断警告：`speech_to_text` 插件未来需要迁移到 Built-in Kotlin，现有 Android 命令行工具只能识别较旧的 SDK XML 格式。本次调试 APK 仍成功生成。
 
 ## 已处理的阻断项
 
