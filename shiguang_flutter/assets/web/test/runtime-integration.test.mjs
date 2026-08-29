@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
 
 const root = new URL('../', import.meta.url);
+
+async function runtimeConfigFor(pageUrl) {
+  const source = await readFile(new URL('src/runtime-config.js', root), 'utf8');
+  const window = { location: new URL(pageUrl) };
+  runInNewContext(source, { URLSearchParams, window });
+  return window.__SHIGUANG_CONFIG__;
+}
 
 test('runtime config loads before the optional demo adapter', async () => {
   const html = await readFile(new URL('index.html', root), 'utf8');
@@ -16,6 +24,26 @@ test('demo adapter only intercepts APIs when demo mode is explicit', async () =>
   const source = await readFile(new URL('src/demo-api.js', root), 'utf8');
 
   assert.match(source, /if \(!demoMode\) return/);
+});
+
+test('bundled app origins enable offline demo mode', async () => {
+  const bundledPages = [
+    'file:///flutter_assets/assets/web/index.html',
+    'https://appassets.shiguang/index.html',
+  ];
+
+  for (const pageUrl of bundledPages) {
+    const config = await runtimeConfigFor(pageUrl);
+    assert.equal(config.demoMode, true, pageUrl);
+  }
+});
+
+test('browser preview stays on the real backend unless demo is requested', async () => {
+  const realConfig = await runtimeConfigFor('http://127.0.0.1:8765/index.html');
+  const demoConfig = await runtimeConfigFor('http://127.0.0.1:8765/index.html?demo=1');
+
+  assert.equal(realConfig.demoMode, false);
+  assert.equal(demoConfig.demoMode, true);
 });
 
 test('app uses configured backend and automatic growth-card entry', async () => {

@@ -8,7 +8,7 @@
 .venv\Scripts\python.exe -m uvicorn run:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-默认使用本地 SQLite；部署时设置 `SHIGUANG_DATABASE_URL` 为 PostgreSQL 连接串，并设置长度足够的 `SHIGUANG_SECRET_KEY`。
+默认使用本地 SQLite。启动前必须设置至少 32 位的 `SHIGUANG_SECRET_KEY`；部署时再将 `SHIGUANG_DATABASE_URL` 设置为 PostgreSQL 连接串。
 
 ## 每日补偿分析
 

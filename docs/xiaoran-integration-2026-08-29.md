@@ -13,24 +13,25 @@
 ## 已完成检查
 
 - 根目录 Node 测试：5 项通过。
-- Web 语音输入测试：10 项通过。
+- Web 与语音输入测试：24 项通过。
+- FastAPI 后端测试：48 项通过。
 - Python 后端语法编译检查：通过。
+- 缺失或过短密钥拒绝启动检查：通过。
 - Git 空白与冲突标记检查：通过。
 - 未带入 `.env.local`、数据库、依赖目录或构建缓存。
 
 ## 尚未完成的验证
 
 - 当前机器未安装 Flutter SDK，未运行 `flutter analyze`、Flutter 测试及真实设备构建。
-- 当前 Python 环境缺少 `pytest` 及后端依赖，未运行 FastAPI 全量测试。
 
-## 合入 main 前必须处理
+## 已处理的阻断项
 
-交接文档称安装包默认使用内置演示接口，但当前运行配置只在 URL 带 `?demo=1` 时开启演示模式：
+原交接文档称安装包默认使用内置演示接口，但原运行配置只在 URL 带 `?demo=1` 时开启演示模式：
 
 - `assets/web/src/runtime-config.js` 默认指向 `http://127.0.0.1:8000`。
 - Android、iOS、macOS 加载 `assets/web/index.html`，没有附加 `demo=1`。
 - Windows 加载 `https://appassets.shiguang/index.html`，同样没有附加 `demo=1`。
 
-因此未运行本机 Python 后端时，安装包的登录和数据接口可能不可用。修复并完成 Flutter、Python 测试前，本分支仅用于保存与评审，不应合入 `main`。
+运行配置现已识别 `file:` 与 Windows 内置域名，在安装包中默认启用离线演示接口；普通浏览器预览仍默认连接真实后端，也可用 `?demo=1` 显式进入演示模式。
 
-另外，Python 启动入口允许使用固定开发密钥。部署到公开环境前，必须强制配置 `SHIGUANG_SECRET_KEY`，不能沿用默认值。
+Python 应用工厂与启动入口现已移除固定开发密钥，缺失或少于 32 位的 `SHIGUANG_SECRET_KEY` 会阻止服务启动。

@@ -60,8 +60,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 def create_app(
+    secret_key: str,
     database_url: str = "sqlite:///./shiguang.db",
-    secret_key: str = "development-only-change-me",
     analysis_extractor: SkillExtractor | None = None,
     chat_responder: ChatResponder | None = None,
     enable_background_analysis: bool = True,
@@ -71,6 +71,8 @@ def create_app(
     ),
     insight_generator: InsightGenerator | None = None,
 ) -> FastAPI:
+    if len(secret_key) < 32:
+        raise ValueError("SHIGUANG_SECRET_KEY must contain at least 32 characters")
     session_factory = build_session_factory(database_url)
     extractor = analysis_extractor or KeywordSkillExtractor()
     responder = chat_responder or SupportiveChatResponder()
@@ -872,6 +874,3 @@ def serialize_user(user: User) -> dict:
         "publicProfile": user.public_profile,
         "onboardingComplete": bool(user.name or user.bio or user.city),
     }
-
-
-app = create_app()

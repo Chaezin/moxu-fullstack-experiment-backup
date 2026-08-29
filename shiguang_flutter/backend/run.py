@@ -22,7 +22,7 @@ _load_local_env()
 
 
 database_url = os.getenv("SHIGUANG_DATABASE_URL", "sqlite:///./shiguang.db")
-secret_key = os.getenv("SHIGUANG_SECRET_KEY", "development-only-change-me")
+secret_key = os.getenv("SHIGUANG_SECRET_KEY", "")
 origins = tuple(
     item.strip()
     for item in os.getenv(
