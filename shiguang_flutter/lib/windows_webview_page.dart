@@ -1,12 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:webview_flutter_windows/webview_flutter_windows.dart';
 
-class WindowsWebViewPage extends StatefulWidget {
-  const WindowsWebViewPage({super.key, required this.url});
+import 'voice/speech_recognition_service.dart';
+import 'voice/voice_bridge_protocol.dart';
+import 'voice/voice_input_controller.dart';
+import 'voice/windows_web_assets.dart';
 
-  final String url;
+class WindowsWebViewPage extends StatefulWidget {
+  const WindowsWebViewPage({super.key});
 
   @override
   State<WindowsWebViewPage> createState() => _WindowsWebViewPageState();
@@ -15,13 +20,21 @@ class WindowsWebViewPage extends StatefulWidget {
 class _WindowsWebViewPageState extends State<WindowsWebViewPage> {
   final WebviewController _controller = WebviewController();
   final List<StreamSubscription<Object?>> _subscriptions = [];
+  late final VoiceInputController _voiceController;
   bool _loading = true;
   bool _canGoBack = false;
   String? _error;
+  String _pageUrl = '';
+
+  static const _appUrl = '$windowsWebOrigin/index.html';
 
   @override
   void initState() {
     super.initState();
+    _voiceController = VoiceInputController(
+      service: DeviceSpeechRecognitionService(),
+      emit: _emitVoiceEvent,
+    );
     _initialize();
   }
 
@@ -45,11 +58,58 @@ class _WindowsWebViewPageState extends State<WindowsWebViewPage> {
           _controller.onLoadError.listen((error) {
             if (mounted) setState(() => _error = error.name);
           }),
+        )
+        ..add(_controller.url.listen((url) => _pageUrl = url))
+        ..add(
+          _controller.webMessage.listen(
+            _handleVoiceMessage,
+            onError: (_) {},
+          ),
         );
-      await _controller.loadUrl(widget.url);
+      await _controller.addVirtualHostNameMapping(
+        windowsWebHost,
+        windowsWebAssetRoot(Platform.resolvedExecutable),
+        WebviewHostResourceAccessKind.deny,
+      );
+      await _loadApp();
       if (mounted) setState(() {});
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
+    }
+  }
+
+  Future<void> _loadApp() async {
+    _pageUrl = _appUrl;
+    await _controller.loadUrl(_appUrl);
+  }
+
+  Future<void> _emitVoiceEvent(Map<String, Object?> event) =>
+      _controller.postWebMessage(jsonEncode(event));
+
+  Future<void> _handleVoiceMessage(Object? message) async {
+    if (!_pageUrl.startsWith('$windowsWebOrigin/')) {
+      return;
+    }
+    try {
+      final command = message is String
+          ? VoiceBridgeCommand.parseJson(message)
+          : VoiceBridgeCommand.parse(message);
+      switch (command.type) {
+        case VoiceCommandType.start:
+          await _voiceController.start(
+            sessionId: command.sessionId,
+            preferredLocale: command.preferredLocale,
+          );
+        case VoiceCommandType.stop:
+          await _voiceController.stop(sessionId: command.sessionId);
+        case VoiceCommandType.cancel:
+          await _voiceController.cancel(sessionId: command.sessionId);
+      }
+    } on FormatException {
+      await _emitVoiceEvent({
+        'type': 'voice.error',
+        'code': 'invalid_command',
+      });
     }
   }
 
@@ -58,6 +118,7 @@ class _WindowsWebViewPageState extends State<WindowsWebViewPage> {
     for (final subscription in _subscriptions) {
       subscription.cancel();
     }
+    _voiceController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -101,7 +162,7 @@ class _WindowsWebViewPageState extends State<WindowsWebViewPage> {
                             _error = null;
                             _loading = true;
                           });
-                          _controller.loadUrl(widget.url);
+                          _loadApp();
                         },
                         child: const Text('重新加载'),
                       ),

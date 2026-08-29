@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  speech_to_text_windows
   webview_flutter_windows
 )
 

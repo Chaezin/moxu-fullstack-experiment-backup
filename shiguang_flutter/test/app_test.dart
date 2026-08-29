@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shiguang_app/main.dart';
+import 'package:shiguang_app/voice/windows_web_assets.dart';
 
 void main() {
   testWidgets('builds the Shiguang application shell', (tester) async {
@@ -15,5 +16,6 @@ void main() {
 
   test('uses the bundled WebView demo on supported platforms', () {
     expect(shiguangWebAsset, 'assets/web/index.html');
+    expect(windowsWebOrigin, 'https://appassets.shiguang');
   });
 }

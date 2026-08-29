@@ -2,6 +2,10 @@
 *.class
 *.log
 *.pyc
+*.db
+.coverage
+.pytest_cache/
+.venv/
 *.swp
 .DS_Store
 .atom/
@@ -46,3 +50,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Local isolated development worktrees
+/.worktrees/
+backend/.env
+backend/.env.local

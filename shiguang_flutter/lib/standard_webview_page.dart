@@ -1,7 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+import 'voice/speech_recognition_service.dart';
+import 'voice/voice_bridge_protocol.dart';
+import 'voice/voice_input_controller.dart';
 
 class StandardWebViewPage extends StatefulWidget {
   const StandardWebViewPage({super.key, required this.assetPath});
@@ -14,6 +19,7 @@ class StandardWebViewPage extends StatefulWidget {
 
 class _StandardWebViewPageState extends State<StandardWebViewPage> {
   late final WebViewController _controller;
+  late final VoiceInputController _voiceController;
   int _progress = 0;
   bool _canGoBack = false;
   String? _error;
@@ -21,8 +27,18 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
   @override
   void initState() {
     super.initState();
+    _voiceController = VoiceInputController(
+      service: DeviceSpeechRecognitionService(),
+      emit: (event) {
+        _emitVoiceEvent(event);
+      },
+    );
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'ShiguangVoiceBridge',
+        onMessageReceived: (message) => _handleVoiceMessage(message.message),
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) {
@@ -76,8 +92,46 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
             setState(() => _error = error.description);
           },
         ),
-      )
-      ..loadFlutterAsset(widget.assetPath);
+      );
+    _loadInitialPage();
+  }
+
+  @override
+  void dispose() {
+    _voiceController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _emitVoiceEvent(Map<String, Object?> event) =>
+      _controller.runJavaScript(
+        'window.ShiguangVoiceInput?.receive(${jsonEncode(event)});',
+      );
+
+  Future<void> _handleVoiceMessage(String message) async {
+    try {
+      final command = VoiceBridgeCommand.parseJson(message);
+      switch (command.type) {
+        case VoiceCommandType.start:
+          await _voiceController.start(
+            sessionId: command.sessionId,
+            preferredLocale: command.preferredLocale,
+          );
+        case VoiceCommandType.stop:
+          await _voiceController.stop(sessionId: command.sessionId);
+        case VoiceCommandType.cancel:
+          await _voiceController.cancel(sessionId: command.sessionId);
+      }
+    } on FormatException {
+      await _emitVoiceEvent({
+        'type': 'voice.error',
+        'code': 'invalid_command',
+      });
+    }
+  }
+
+  Future<void> _loadInitialPage() async {
+    await _controller.clearCache();
+    await _controller.loadFlutterAsset(widget.assetPath);
   }
 
   Future<void> _handleBack() async {
@@ -112,7 +166,7 @@ class _StandardWebViewPageState extends State<StandardWebViewPage> {
             if (_error != null)
               _WebViewError(
                 message: _error!,
-                onRetry: () => _controller.loadFlutterAsset(widget.assetPath),
+                onRetry: _loadInitialPage,
               ),
           ],
         ),

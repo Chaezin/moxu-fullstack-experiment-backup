@@ -1,4 +1,6 @@
 (() => {
+  const demoMode = window.__SHIGUANG_CONFIG__?.demoMode === true;
+  if (!demoMode) return;
   window.__SHIGUANG_DEMO__ = true;
 
   const STORE_KEY = 'shiguang-flutter-demo-api-v1';
@@ -51,6 +53,11 @@
     catch { return structuredClone(seed); }
   };
   const db = load();
+  for (const key of ['conversations', 'cards', 'abilities', 'directions', 'people']) {
+    if (!Array.isArray(db[key]) || db[key].length === 0) db[key] = structuredClone(seed[key]);
+  }
+  if (!db.messages || Object.keys(db.messages).length === 0) db.messages = structuredClone(seed.messages);
+  if (!db.schedule) db.schedule = structuredClone(seed.schedule);
   const save = () => localStorage.setItem(STORE_KEY, JSON.stringify(db));
   const json = (body, status = 200) => new Response(JSON.stringify(body), {
     status, headers: { 'content-type': 'application/json; charset=utf-8' },

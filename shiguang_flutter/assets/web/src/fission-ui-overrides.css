@@ -1,0 +1,4 @@
+/* Local markup compatibility: the reference card does not show recommendation copy. */
+.partner-list article > div:nth-child(2) > strong {
+  display: none;
+}
