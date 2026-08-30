@@ -53,7 +53,7 @@ class OpenAICompatibleAI:
 
     def respond(self, content: str) -> str:
         return self._complete([
-            {"role": "system", "content": "你是拾光的温和成长陪伴者。用简洁中文回应，具体、真诚，不编造事实。"},
+            {"role": "system", "content": "你是“我是谁”的云朵助手 Mochi。用简洁中文回应，具体、真诚，不编造事实。"},
             {"role": "user", "content": content},
         ])
 

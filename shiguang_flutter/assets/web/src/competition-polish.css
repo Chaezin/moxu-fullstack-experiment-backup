@@ -1,0 +1,154 @@
+/* Competition polish: one warm identity for “我是谁” and its companion Mochi. */
+:root{
+  --cream-0:#fffdf8;
+  --cream-1:#f7f1e7;
+  --cream-2:#eee4d6;
+  --cream-3:#dfd2bf;
+  --forest:#2b5946;
+  --forest-deep:#203f33;
+  --sage:#dbe4d5;
+  --ink:#29352e;
+  --muted:#68736c;
+}
+
+html,body{background:var(--cream-2)!important;color:var(--ink)}
+
+/* Login: remove the remaining lilac field and keep the organic silhouette in cream. */
+.formal-login.login-screen{
+  background:
+    radial-gradient(circle at 14% 10%,#fffdf9 0 13%,transparent 36%),
+    radial-gradient(circle at 82% 84%,#dfe6d8 0 9%,transparent 34%),
+    linear-gradient(145deg,#faf5ec 0%,#efe5d7 54%,#e4dacb 100%)!important;
+}
+.formal-login.login-screen:before{
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.12;
+  background-image:radial-gradient(#665d501f .7px,transparent .8px);
+  background-size:5px 5px;
+}
+.formal-login .login-tide{opacity:.78!important;filter:saturate(.72)}
+.formal-login .login-tide:before{
+  background:linear-gradient(145deg,#eadbc7 0%,#d8dfd0 55%,#f2e8dc 100%)!important;
+  box-shadow:inset 0 0 0 1px #fff9,0 36px 90px #6f655830;
+}
+.formal-login.login-screen>section{
+  border-color:#756b5e26!important;
+  background:rgba(255,252,246,.91)!important;
+  box-shadow:0 30px 78px #655c4f26!important;
+}
+.formal-login .login-mark{background:var(--forest)!important;color:#fffdf7!important}
+.formal-login .login-brand-row b{color:var(--forest-deep);font-size:16px!important}
+.formal-login .login-brand-row span{color:#69736c!important;font-size:8px!important}
+.formal-login header>span{font-size:10px!important;color:#53705f!important}
+.formal-login h1{color:#26372e;font-size:32px!important}
+.formal-login header p{color:#626c65!important;font-size:11px!important}
+.formal-login .login-method-tabs{background:#ece9e0!important}
+.formal-login .login-method-tabs button{font-size:10px!important}
+.formal-login .login-method-tabs button.on{background:#fffdf8!important;color:var(--forest)!important}
+.formal-login .login-form>label{background:#fffdf9e8!important;border-color:#756b5e2b!important}
+.formal-login .login-form>label>span,
+.formal-login .login-options span,
+.formal-login .login-options button,
+.formal-login .register-row{font-size:9px!important}
+.formal-login .login-form input{font-size:12px!important;color:var(--ink)!important}
+.formal-login .login-submit{background:var(--forest)!important;border-radius:13px!important}
+.formal-login .device-login{background:#e4eadf!important;color:var(--forest)!important}
+.formal-login .login-legal{font-size:8px!important;color:#747b75!important}
+
+/* Navigation: readable on a projector, explicit on a phone. */
+.app-head .privacy{font-size:10px!important;color:#52655a!important}
+.app-head .brand span{font-size:8px!important;color:#69736c!important}
+.menu-trigger span{font-style:normal;font-size:8px;font-weight:650}
+.mobile-section-nav{display:none}
+
+@media(min-width:1100px){
+  .workspace-main .app-head,
+  .workspace-main .page{max-width:1240px}
+  .workspace-main .page:not(#talk){padding-left:clamp(26px,3vw,48px);padding-right:clamp(26px,3vw,48px)}
+  .workspace-sidebar nav button span{font-size:13px!important}
+  .workspace-sidebar section header b{font-size:12px}
+  .workspace-sidebar .auto-card-settings small,
+  .workspace-sidebar footer small{font-size:8px}
+  #talk .conversation-workspace .conversation{width:min(100%,980px)!important;padding-inline:54px!important}
+  #talk .conversation-workspace .input-dock{width:min(calc(100% - 48px),920px)!important}
+  #friend .social-profile-card{width:min(100%,960px)}
+  #friend .social-card-identity p,
+  #friend .social-story-list p{font-size:10px!important}
+  #friend .social-story-list h3{font-size:17px!important}
+  .growth-calendar{margin-inline:0!important}
+  .calendar-weekdays span{font-size:9px}
+  .calendar-day time{font-size:10px}
+  .portrait-ability-card>header p,
+  .real-data-empty p{font-size:12px!important}
+}
+
+@media(max-width:699px){
+  .formal-login.login-screen>section{width:calc(100% - 24px);padding:26px 22px 30px!important}
+  .formal-login .login-tide{right:-260px!important;top:-250px!important}
+  .formal-login h1{font-size:29px!important}
+  .formal-login header p{font-size:10px!important}
+  .app-head .menu-trigger{
+    width:50px!important;
+    padding:0 7px!important;
+    display:grid!important;
+    grid-template-columns:auto 1fr;
+    gap:4px;
+    place-items:center;
+  }
+  .app-head .brand-menu{min-width:118px!important}
+  .mobile-section-nav{
+    position:sticky;
+    top:64px;
+    z-index:11;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:5px;
+    margin:0;
+    padding:7px 12px 8px;
+    border-bottom:1px solid #756c6026;
+    background:#f7f1e8e8;
+    backdrop-filter:blur(14px);
+    box-shadow:0 6px 15px #564f4410;
+  }
+  .mobile-section-nav button{
+    min-height:39px;
+    border:1px solid transparent;
+    border-radius:12px;
+    background:transparent;
+    color:#747b75;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+  }
+  .mobile-section-nav button i{font-style:normal;font-size:13px}
+  .mobile-section-nav button span{font-size:9px}
+  .mobile-section-nav button.on{
+    border-color:#6d665c24;
+    background:#e1e7dc;
+    color:var(--forest-deep);
+    box-shadow:inset 1px 1px #fff,0 4px 9px #554f4516;
+  }
+  .workspace-shell.tab-talk .workspace-main>.app-head{display:flex!important}
+  .workspace-shell.tab-talk .mobile-section-nav{position:sticky;top:64px}
+  .workspace-shell.tab-talk #talk{
+    height:calc(100svh - 119px)!important;
+    min-height:0!important;
+    padding-top:0;
+  }
+  #talk .cloud-ip-stage{flex-basis:29%!important;min-height:145px!important}
+  #talk .conversation-workspace .conversation{padding:14px 18px 8px!important}
+  #talk .conversation-workspace .input-dock{margin:9px 10px 11px!important;width:calc(100% - 20px)!important}
+  .detail-page>header p,
+  .real-data-empty p{font-size:11px!important;line-height:1.75!important}
+  .app-head .privacy{font-size:9px!important}
+}
+
+@media(max-width:390px){
+  .formal-login.login-screen>section{width:calc(100% - 20px);padding-inline:20px!important}
+  .formal-login h1{font-size:27px!important}
+  .mobile-section-nav{padding-inline:8px}
+}

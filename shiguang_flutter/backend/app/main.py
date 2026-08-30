@@ -77,7 +77,7 @@ def create_app(
     extractor = analysis_extractor or KeywordSkillExtractor()
     responder = chat_responder or SupportiveChatResponder()
     insights = insight_generator or LocalInsightGenerator()
-    app = FastAPI(title="拾光 API", version="1.0.0")
+    app = FastAPI(title="我是谁 API", version="1.0.0")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(allowed_origins),
@@ -790,7 +790,7 @@ def create_app(
             messages = session.scalars(select(Message).where(Message.conversation_id == conversation.id).order_by(Message.sequence_no)).all()
             payload["conversations"].append({"id": conversation.id, "title": conversation.title, "messages": [serialize_message(message) for message in messages]})
         if format.lower() == "txt":
-            lines = [f"拾光档案：{user.name or user.phone}"]
+            lines = [f"我是谁 · 个人成长档案：{user.name or user.phone}"]
             for item in payload["conversations"]:
                 lines.append(f"\n## {item['title']}")
                 lines.extend(f"{message['role']}: {message['content']}" for message in item["messages"])

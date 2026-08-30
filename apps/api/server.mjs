@@ -256,4 +256,4 @@ async function loadUsers() { if (!existsSync(usersFile)) return []; return JSON.
 async function saveUsers(users) { await mkdir(dataDir, { recursive: true }); await writeFile(usersFile, JSON.stringify(users, null, 2)); }
 function json(res, status, data) { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-agent-rule-version': AGENT_RULE_VERSION }); res.end(JSON.stringify(data)); }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) createApp().listen(Number(process.env.PORT || 4173), () => console.log(`时光初版：http://127.0.0.1:${process.env.PORT || 4173}`));
+if (process.argv[1] === fileURLToPath(import.meta.url)) createApp().listen(Number(process.env.PORT || 4173), () => console.log(`我是谁：http://127.0.0.1:${process.env.PORT || 4173}`));

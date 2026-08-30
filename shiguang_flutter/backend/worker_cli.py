@@ -7,7 +7,7 @@ from app.worker import process_all_analysis_jobs
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="运行拾光成长分析补偿任务")
+    parser = argparse.ArgumentParser(description="运行我是谁成长分析补偿任务")
     parser.add_argument("--max-jobs", type=int, default=1_000)
     args = parser.parse_args()
     database_url = os.getenv("SHIGUANG_DATABASE_URL", "sqlite:///./shiguang.db")

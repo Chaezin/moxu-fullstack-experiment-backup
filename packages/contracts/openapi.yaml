@@ -23,7 +23,7 @@ paths:
         '401': { description: 手机号或密码错误 }
   /api/chat:
     post:
-      summary: 与“时光”进行流式对话
+      summary: 与云朵助手“Mochi”进行流式对话
       responses:
         '200': { description: UTF-8 流式文本回复 }
         '503': { description: 服务端尚未配置模型 }

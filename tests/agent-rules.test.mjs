@@ -6,7 +6,7 @@ import { safetyRoute } from '../apps/api/agent/safety.mjs';
 test('聊天提示词按固定规则与唯一任务装配', () => {
   const prompt = buildChatSystemPrompt();
   assert.equal(AGENT_RULE_VERSION, '1.1');
-  assert.match(prompt, /角色与目标|你叫“时光”/);
+  assert.match(prompt, /角色与目标|你叫“Mochi”/);
   assert.match(prompt, /对话规则/);
   assert.match(prompt, /安全规则/);
   assert.match(prompt, /隐私规则/);

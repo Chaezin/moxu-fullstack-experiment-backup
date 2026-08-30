@@ -1,4 +1,4 @@
-# 拾光 APP MVP
+# 我是谁 APP MVP
 
 一个独立的移动端优先项目，不依赖原 Motion Design Lab。
 
