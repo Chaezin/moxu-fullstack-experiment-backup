@@ -4,9 +4,9 @@
 
 ## 演示视频
 
-[![观看“我是谁”App 演示](docs/media/who-am-i-demo-cover.png)](docs/media/who-am-i-demo.mp4)
+![“我是谁”App 32 秒产品演示](docs/media/who-am-i-demo.gif)
 
-点击封面观看 32 秒产品演示。
+[观看带声音的 MP4 版本](docs/media/who-am-i-demo.mp4)
 
 ## 为什么做
 
